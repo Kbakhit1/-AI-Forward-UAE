@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبادرة تمكين الذكاء الاصطناعي في الإمارات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Deep Teal -->
+    <!-- Application Structure Plan: تم تصميم التطبيق كهيكل تفاعلي من عدة أقسام يمكن التنقل بينها عبر شريط علوي. يبدأ التطبيق بقسم رئيسي يعرض الرؤية لجذب الانتباه، ثم ينتقل إلى أقسام تفصيلية: 'الاستراتيجية' التي تعرض خطة التنفيذ على مراحل، 'المنهج الدراسي' وهو قسم تفاعلي يسمح بتصفية الأدوات حسب التخصص، و'الأثر المتوقع' الذي يعرض النتائج المتوقعة عبر رسوم بيانية ومؤشرات أداء. وأخيراً قسم عن الخبير لتعزيز المصداقية. تم اختيار هذا الهيكل لتمكين المستخدم (سواء كان من إدارة الجامعة أو الطلاب) من استكشاف الخطة بشكل غير خطي والتركيز على الأجزاء التي تهمه، مما يعزز التفاعل والفهم. -->
+    <!-- Visualization & Content Choices: 
+        1. الرؤية -> الهدف: عرض التوزيع المستهدف للطلاب -> الأسلوب: رسم بياني دائري (Donut Chart) -> التفاعل: عرض نسبة كل تخصص عند المرور بالفأرة -> المبرر: تقديم نظرة سريعة وبصرية عن شمولية المبادرة لمختلف التخصصات. -> المكتبة: Chart.js.
+        2. الاستراتيجية -> الهدف: توضيح مراحل تنفيذ المبادرة -> الأسلوب: مخطط زمني تفاعلي (Interactive Timeline) -> التفاعل: إظهار تفاصيل كل مرحلة عند النقر عليها -> المبرر: تبسيط عملية معقدة وجعلها سهلة المتابعة والفهم. -> المكتبة: HTML/CSS/JS.
+        3. المنهج الدراسي -> الهدف: استعراض الأدوات المقترحة لكل قطاع -> الأسلوب: بطاقات تفاعلية قابلة للفلترة -> التفاعل: أزرار لتصفية الأدوات حسب التخصص (هندسة، طب، أعمال...) -> المبرر: تمكين المستخدم من الوصول المباشر للمعلومات الأكثر صلة به. -> المكتبة: HTML/CSS/JS.
+        4. الأثر المتوقع -> الهدف: عرض مؤشرات الأداء الرئيسية المتوقعة -> الأسلوب: رسم بياني شريطي (Bar Chart) وعدادات رقمية متحركة -> التفاعل: عرض القيم الدقيقة عند المرور على الأعمدة -> المبرر: تحويل الأهداف إلى أرقام ملموسة وجذابة بصرياً. -> المكتبة: Chart.js & JS.
+        الخلاصة: تم اختيار هذه العناصر لتكون تفاعلية، سهلة الفهم، وتدعم الهيكل العام للتطبيق الذي يركز على الاستكشاف الموجه. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #FDFBF8;
+            color: #1a202c;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #0d9488;
+            border-bottom-color: #0d9488;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #0d9488;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 12px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #ccfbf1;
+            border: 3px solid #0d9488;
+            z-index: 1;
+        }
+        .timeline-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -14px;
+            top: 26px;
+            width: 2px;
+            height: 100%;
+            background-color: #5eead4;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="min-h-screen">
+        <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 text-2xl font-bold text-teal-600">
+                            مبادرة AI Forward UAE
+                        </div>
+                    </div>
+                    <nav class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
+                            <a href="#vision" class="nav-link active px-3 py-2 rounded-md text-sm font-medium">الرؤية</a>
+                            <a href="#strategy" class="nav-link px-3 py-2 rounded-md text-sm font-medium">الاستراتيجية</a>
+                            <a href="#curriculum" class="nav-link px-3 py-2 rounded-md text-sm font-medium">المنهج الدراسي</a>
+                            <a href="#impact" class="nav-link px-3 py-2 rounded-md text-sm font-medium">الأثر المتوقع</a>
+                            <a href="#expert" class="nav-link px-3 py-2 rounded-md text-sm font-medium">عن الخبير</a>
+                        </div>
+                    </nav>
+                     <div class="md:hidden">
+                        <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-teal-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500">
+                            <span class="sr-only">Open main menu</span>
+                            <div class="space-y-1.5">
+                                <div class="w-6 h-0.5 bg-gray-600"></div>
+                                <div class="w-6 h-0.5 bg-gray-600"></div>
+                                <div class="w-6 h-0.5 bg-gray-600"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-center">
+                    <a href="#vision" class="nav-link active block px-3 py-2 rounded-md text-base font-medium">الرؤية</a>
+                    <a href="#strategy" class="nav-link block px-3 py-2 rounded-md text-base font-medium">الاستراتيجية</a>
+                    <a href="#curriculum" class="nav-link block px-3 py-2 rounded-md text-base font-medium">المنهج الدراسي</a>
+                    <a href="#impact" class="nav-link block px-3 py-2 rounded-md text-base font-medium">الأثر المتوقع</a>
+                    <a href="#expert" class="nav-link block px-3 py-2 rounded-md text-base font-medium">عن الخبير</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <section id="vision" class="section active animate-fade-in">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">تمكين الجيل القادم بقوة الذكاء الاصطناعي</h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">
+                        استراتيجية متكاملة ومجانية لتزويد طلاب الجامعات في الإمارات بالمهارات العملية لأدوات الذكاء الاصطناعي، لسد الفجوة بين التعليم الأكاديمي ومتطلبات سوق العمل المستقبلية، وتحقيق شهرة واسعة للمبادرة.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-center md:text-right">
+                        <h2 class="text-2xl font-bold text-teal-700 mb-4">أهداف المبادرة</h2>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mt-1 ml-3">&#10003;</span>
+                                <span><strong class="font-semibold">تأهيل الطلاب:</strong> إكساب الطلاب مهارات تطبيقية مباشرة تزيد من قدرتهم التنافسية في سوق العمل.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mt-1 ml-3">&#10003;</span>
+                                <span><strong class="font-semibold">دعم الجامعات:</strong> تقديم برامج نوعية مجانية تعزز من مكانة الجامعات كحاضنات للمواهب المستقبلية.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-teal-500 mt-1 ml-3">&#10003;</span>
+                                <span><strong class="font-semibold">تحقيق الشهرة:</strong> بناء علامة تجارية قوية للمبادرة والخبير القائم عليها من خلال تحقيق نتائج ملموسة.</span>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="text-teal-500 mt-1 ml-3">&#10003;</span>
+                                <span><strong class="font-semibold">إنشاء مجتمع معرفي:</strong> بناء شبكة من الطلاب الموهوبين والخبراء في مجال الذكاء الاصطناعي في المنطقة.</span>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="text-teal-500 mt-1 ml-3">&#10003;</span>
+                                <span><strong class="font-semibold">بناء مجتمع طلابي:</strong> تأسيس مجتمع خاص بالطلاب لتبادل الخبرات، تحقيق الشهرة بينهم، والاستفادة منه مستقبلاً.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-center mb-4 text-gray-700">التوزيع المستهدف للطلاب حسب التخصص</h3>
+                        <div class="chart-container">
+                            <canvas id="studentSpecializationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="strategy" class="section">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">استراتيجية التنفيذ: خارطة طريق للنجاح</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-md text-gray-600">
+                        نتبع نهجاً مرحلياً ومنظماً لضمان تحقيق أقصى استفادة وتأثير للمبادرة في جميع أنحاء الإمارات. كل مرحلة مصممة للبناء على نجاح المرحلة التي تسبقها.
+                    </p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="relative pr-8 space-y-12">
+                        <div class="timeline-item">
+                            <h3 class="text-xl font-bold text-teal-700">المرحلة الأولى: بناء الشراكات وتصميم المنهج (الشهر 1-2)</h3>
+                            <p class="mt-2 text-gray-600">التواصل مع الجامعات والكليات الرائدة في الإمارات لعرض المبادرة كمنحة مجانية. بالتوازي، يتم تصميم محتوى تدريبي مخصص بناءً على احتياجات كل تخصص بالتعاون مع الأقسام الأكاديمية.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h3 class="text-xl font-bold text-teal-700">المرحلة الثانية: إطلاق البرامج التجريبية (الشهر 3-4)</h3>
+                            <p class="mt-2 text-gray-600">تنفيذ ورش عمل تجريبية في عدد محدود من الجامعات الشريكة. الهدف هو قياس التفاعل، جمع الملاحظات، وتحسين المحتوى وتجربة التدريب قبل التوسع الكامل.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h3 class="text-xl font-bold text-teal-700">المرحلة الثالثة: التوسع والتغطية الإعلامية (الشهر 5-9)</h3>
+                            <p class="mt-2 text-gray-600">إطلاق المبادرة على نطاق واسع في جميع الجامعات الشريكة. يصاحب ذلك حملة إعلامية منظمة لتسليط الضوء على قصص النجاح والنتائج الأولية، بهدف تحقيق شهرة وانتشار واسعين.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h3 class="text-xl font-bold text-teal-700">المرحلة الرابعة: قياس الأثر والتطوير المستمر (الشهر 10-12)</h3>
+                            <p class="mt-2 text-gray-600">تحليل بيانات الأداء ومؤشرات النجاح (مثل نسبة توظيف الخريجين، رضا الطلاب والجامعات). استخدام هذه البيانات لتطوير المناهج وإطلاق دورات متقدمة في العام التالي.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="curriculum" class="section">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">المنهج الدراسي: أدوات عملية لكل مسار مهني (يمكن اضافة ادوات واساليب اخرى)</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-md text-gray-600">
+                        يركز المنهج على الأدوات التي تقدم قيمة عملية ومباشرة للطلاب في دراستهم ومشاريعهم. اختر تخصصك لرؤية الأدوات المقترحة.
+                    </p>
+                </div>
+
+                <div class="flex justify-center flex-wrap gap-2 md:gap-4 mb-8" id="tool-filters">
+                    <button data-filter="all" class="tab-button active px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">الكل</button>
+                    <button data-filter="research" class="tab-button px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">البحث والكتابة</button>
+                    <button data-filter="tech" class="tab-button px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">الهندسة والتقنية</button>
+                    <button data-filter="business" class="tab-button px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">الأعمال والتسويق</button>
+                    <button data-filter="design" class="tab-button px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">الفنون والتصميم</button>
+                    <button data-filter="health" class="tab-button px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-teal-100">القطاع الصحي</button>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="tool-grid">
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="research">
+                        <h3 class="font-bold text-lg text-teal-800">Perplexity AI</h3>
+                        <p class="text-sm text-gray-600 mt-2">محرك بحث حواري يقدم إجابات دقيقة مع مصادر موثوقة، مثالي لكتابة الأوراق البحثية والتحقق من المعلومات.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="tech">
+                        <h3 class="font-bold text-lg text-teal-800">GitHub Copilot</h3>
+                        <p class="text-sm text-gray-600 mt-2">مساعد برمجي ذكي يكمل الأكواد ويقترح حلولاً برمجية، مما يسرّع من عملية التطوير لطلاب علوم الحاسب والهندسة.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="business">
+                        <h3 class="font-bold text-lg text-teal-800">Jasper.ai (Copy.ai)</h3>
+                        <p class="text-sm text-gray-600 mt-2">أداة لكتابة المحتوى التسويقي والإعلاني بجودة عالية، تساعد طلاب التسويق في بناء حملات إعلانية فعالة.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="design">
+                        <h3 class="font-bold text-lg text-teal-800">Midjourney / Firefly</h3>
+                        <p class="text-sm text-gray-600 mt-2">منصات لتوليد الصور الفنية والتصاميم الإبداعية عبر الأوامر النصية، أداة أساسية لطلاب الفنون والتصميم الجرافيكي.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="research">
+                        <h3 class="font-bold text-lg text-teal-800">ChatGPT-4o</h3>
+                        <p class="text-sm text-gray-600 mt-2">للتلخيص، إعادة الصياغة، والعصف الذهني في جميع التخصصات. سيتم التركيز على كيفية صياغة الأوامر (Prompts) الفعالة.</p>
+                    </div>
+                     <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="research">
+                        <h3 class="font-bold text-lg text-teal-800">Quizlet AI</h3>
+                        <p class="text-sm text-gray-600 mt-2">لإنشاء بطاقات تعليمية، اختبارات قصيرة، وأساليب مراجعة ذكية من الملاحظات الدراسية لتسهيل المذاكرة والاستعداد للاختبارات.</p>
+                    </div>
+                     <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="research">
+                        <h3 class="font-bold text-lg text-teal-800">Grammarly</h3>
+                        <p class="text-sm text-gray-600 mt-2">مساعد كتابة ذكي لتحسين جودة النصوص الأكاديمية والتقارير، من خلال تصحيح الأخطاء النحوية وتقديم اقتراحات للأسلوب.</p>
+                    </div>
+                     <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="health">
+                        <h3 class="font-bold text-lg text-teal-800">Glass AI</h3>
+                        <p class="text-sm text-gray-600 mt-2">أداة تساعد في تشخيص الحالات الطبية وتلخيص الأبحاث، مفيدة لطلاب الطب والعلوم الصحية لتوسيع معرفتهم.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="business tech">
+                        <h3 class="font-bold text-lg text-teal-800">Notion AI</h3>
+                        <p class="text-sm text-gray-600 mt-2">لتنظيم المهام والمشاريع وتدوين الملاحظات بشكل ذكي، يعزز الإنتاجية الشخصية والجماعية للطلاب.</p>
+                    </div>
+                    <div class="tool-card border rounded-lg p-6 bg-white shadow-sm" data-category="tech">
+                        <h3 class="font-bold text-lg text-teal-800">Google Gemini</h3>
+                        <p class="text-sm text-gray-600 mt-2">لتحليل البيانات المعقدة وفهم الأكواد البرمجية، أداة قوية لطلاب الهندسة والبيانات الضخمة.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="impact" class="section">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">الأثر المتوقع: أرقام تتحدث عن النجاح</h2>
+                     <p class="mt-3 max-w-2xl mx-auto text-md text-gray-600">
+                        نهدف إلى تحقيق نتائج قابلة للقياس تعكس نجاح المبادرة وتساهم في تعزيز شهرتها ومصداقيتها على المدى الطويل.
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center mb-12">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div id="students-trained" class="text-4xl font-bold text-teal-600">0</div>
+                        <p class="text-gray-600 mt-2">طالب سيتم تدريبه (الهدف السنوي)</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div id="universities-partnered" class="text-4xl font-bold text-teal-600">0</div>
+                        <p class="text-gray-600 mt-2">جامعة ومعهد شريك</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <div id="projects-completed" class="text-4xl font-bold text-teal-600">0</div>
+                        <p class="text-gray-600 mt-2">مشروع تخرج مدعوم بالذكاء الاصطناعي</p>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 md:p-8 rounded-lg shadow-sm">
+                     <h3 class="text-xl font-bold text-center mb-4 text-gray-700">مؤشرات الأداء الرئيسية للمبادرة</h3>
+                    <div class="chart-container mx-auto" style="max-width: 600px;">
+                        <canvas id="kpiChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="expert" class="section">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">الخبير وقائد المبادرة: هشام دكاك</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-md text-gray-600">
+                        شريكك في تحويل تحديات الذكاء الاصطناعي إلى قيمة عملية ونمو حقيقي.
+                    </p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+                    <div class="grid md:grid-cols-3 gap-8 text-center">
+                        <div class="border-b md:border-b-0 md:border-l pb-4 md:pb-0 md:pl-4 border-gray-200">
+                            <p class="text-4xl font-bold text-teal-600">15</p>
+                            <p class="mt-2 text-gray-500">سنة من الخبرة</p>
+                        </div>
+                        <div class="border-b md:border-b-0 md:border-l pb-4 md:pb-0 md:pl-4 border-gray-200">
+                            <p class="text-4xl font-bold text-teal-600">700+</p>
+                            <p class="mt-2 text-gray-500">متدرب ملهم</p>
+                        </div>
+                        <div>
+                            <p class="text-4xl font-bold text-teal-600">75+</p>
+                            <p class="mt-2 text-gray-500">مشروع استشاري</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <p class="text-gray-700 leading-relaxed">
+                            مؤسس ToolsWorld.ai ورئيس شراكات التسويق في LikeCard، أعمل على تبسيط التقنيات المعقدة لتحقيق نمو عملي. أقدم استشارات لكبرى المؤسسات وأتحدث في فعاليات رائدة. النجاح لا يكمن في الأدوات وحدها، بل في دمجها بذكاء لخلق قيمة حقيقية وميزة دائمة.
+                        </p>
+                        <h3 class="font-bold text-lg text-gray-800 mt-8 mb-4">مجالات الخبرة والتدريب</h3>
+                        <div class="flex justify-center flex-wrap gap-4 text-teal-800">
+                            <span class="bg-teal-50 rounded-full px-4 py-1">القطاع القانوني</span>
+                            <span class="bg-teal-50 rounded-full px-4 py-1">القطاع المالي</span>
+                            <span class="bg-teal-50 rounded-full px-4 py-1">الرعاية الصحية</span>
+                            <span class="bg-teal-50 rounded-full px-4 py-1">العقارات والتسويق</span>
+                            <span class="bg-teal-50 rounded-full px-4 py-1">استراتيجيات الذكاء الاصطناعي للشركات</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function setActiveLink(targetId) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${targetId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === targetId) {
+                        section.classList.add('active');
+                    }
+                });
+                setActiveLink(targetId);
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    showSection(targetId);
+                    if(mobileMenu.classList.contains('hidden') === false){
+                       mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            showSection('vision');
+
+            const toolFilters = document.getElementById('tool-filters');
+            const toolCards = document.querySelectorAll('.tool-card');
+
+            toolFilters.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const filter = e.target.dataset.filter;
+                    
+                    toolFilters.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    toolCards.forEach(card => {
+                        const categories = card.dataset.category.split(' ');
+                        if (filter === 'all' || categories.includes(filter)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+            });
+
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+            
+            const studentsTrained = document.getElementById('students-trained');
+            const universitiesPartnered = document.getElementById('universities-partnered');
+            const projectsCompleted = document.getElementById('projects-completed');
+            animateValue(studentsTrained, 0, 2500, 2000);
+            animateValue(universitiesPartnered, 0, 15, 2000);
+            animateValue(projectsCompleted, 0, 300, 2000);
+
+
+            const studentCtx = document.getElementById('studentSpecializationChart').getContext('2d');
+            new Chart(studentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['الهندسة والتقنية', 'إدارة الأعمال', 'العلوم الصحية', 'الفنون والعلوم الإنسانية', 'القانون'],
+                    datasets: [{
+                        label: 'توزيع الطلاب',
+                        data: [35, 30, 15, 15, 5],
+                        backgroundColor: ['#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#ccfbf1'],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                             labels: {
+                                font: { family: 'Tajawal', size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const kpiCtx = document.getElementById('kpiChart').getContext('2d');
+            new Chart(kpiCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['معدل توظيف الخريجين (%)', 'رضا الطلاب عن التدريب (%)', 'معدل تبني الجامعات للمبادرة (%)', 'نمو المهارات العملية (%)'],
+                    datasets: [{
+                        label: 'الهدف المتوقع',
+                        data: [20, 95, 80, 75],
+                        backgroundColor: '#0d9488',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                     indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                             grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%'
+                                }
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: { family: 'Tajawal' }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
